@@ -1,5 +1,6 @@
 import os
 import cv2
+import json
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -14,14 +15,17 @@ class MPIIDataset(Dataset):
         self.transform = transform
         
         # load images
-        image_dir = 'D:/python_virtual/newvenv/data/images/'
-        image_name_list = os.listdir(image_dir)
-        print(len(image_name_list))
-        for name in image_name_list:
-            image = cv2.imread(image_dir + name, 0)
-            
-            # normalization
-            image = image / 255
+        dir = 'D:/data/mpii_data/'
+        image_dir = dir + 'mpii_human_pose_v1/images/'
+        annotation_dir = dir
+        image_name_list = []
+
+        with open(annotation_dir + 'mpii_annotations.json', 'r') as f:
+            json_data = json.load(f)
+
+            for i in range(len(json_data)):
+                if json_data[i]['img_width'] == 1280 and json_data[i]['img_height'] == 720:
+                    image_name_list.append(json_data[i]['img_paths'])
             
             
 
