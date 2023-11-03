@@ -63,9 +63,9 @@ class MPIIDataset(Dataset):
         self.transform = transform
         
         # load images
-        dir = 'D:/data/mpii_data/'
-        image_dir = dir + 'mpii_human_pose_v1/images/'
-        annotation_dir = dir
+        self.root_dir = 'D:/data/mpii_data/'
+        self.image_dir = self.root_dir + 'mpii_human_pose_v1/images/'
+        annotation_dir = self.root_dir
         self.image_name_list = []
         self.joints_list = []
         
@@ -77,37 +77,31 @@ class MPIIDataset(Dataset):
                 if json_data[i]['img_width'] == 1280 and json_data[i]['img_height'] == 720 and json_data[i]['numOtherPeople'] == 0:
                     self.image_name_list.append(json_data[i]['img_paths'])
                     self.joints_list.append(json_data[i]['joint_self'])
-        
-        for img_idx in range(len(self.image_name_list)):
-            image = cv2.imread(image_dir + self.image_name_list[img_idx], 0)
-            image = np.float32(image)
-            image = image / 255
-            
-            temp_heatmap = []
-            joint_points = self.joints_list[img_idx]
-            for i in range(len(joint_points)):
-                heatmap = generate_gaussian(np.zeros((image.shape[0], image.shape[1])), joint_points[i][0], joint_points[i][1])
-                temp_heatmap.append(heatmap)
-            
-            temp_heatmap = np.array(temp_heatmap, dtype=np.float32)
-            heatmap = np.max(temp_heatmap, axis=0)
-            
-            self.image_list.append(image)
-            self.heatmap_list.append(heatmap)
-                
-        print(len(self.image_name_list))
-        print(len(self.image_list))
-        print(len(self.heatmap_list))
-        assert len(self.image_list) == len(self.heatmap_list)
             
 
     def __len__(self):
-        return len(self.image_list)
+        return len(self.image_name_list)
 
     def __getitem__(self, idx):
-        image = self.image_list[idx]
-        gt = self.heatmap_list[idx]
+        image = cv2.imread(self.image_dir + self.image_name_list[idx], 0)
+        image = np.float32(image)
+        image = image / 255
+        
+        temp_heatmap = []
+        joint_points = self.joints_list[idx]
+        for i in range(len(joint_points)):
+            heatmap = generate_gaussian(np.zeros((image.shape[0], image.shape[1])), joint_points[i][0], joint_points[i][1])
+            temp_heatmap.append(heatmap)
+        
+        temp_heatmap = np.array(temp_heatmap, dtype=np.float32)
+        gt = np.max(temp_heatmap, axis=0)
+        
+        # plt.subplot(1, 2, 1)
+        # plt.imshow(image)
+        # plt.subplot(1, 2, 2)
+        # plt.imshow(gt)
+        # plt.show()
         
         return image, gt
 
-data = MPIIDataset()
+# data = MPIIDataset()
