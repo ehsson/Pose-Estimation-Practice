@@ -9,6 +9,8 @@ import torchvision
 from torch import optim
 from torch.utils.data import DataLoader, random_split
 
+from pose_hrnet.models.pose_hrnet import PoseHighResolutionNet
+from pose_hrnet.config.default import _C as cfg
 from dataset import MPIIDataset
 
 epoch_size = 100
@@ -22,12 +24,13 @@ train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
 print("train size: {}".format(train_size))
 print("valid_size: {}".format(valid_size))
 
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-valid_loader = DataLoader(valid_dataset, batch_size=32, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=False)
 
 criterion = nn.MSELoss(reduce='mean')
 
-model = None
+model = PoseHighResolutionNet(cfg)
+model = model.cuda()
 
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
@@ -36,12 +39,12 @@ for epoch in range(1, epoch_size):
     valid_loss = 0
     
     model.train()
-    for step, (image, gt) in enumerate(train_loader):
+    for step, (images, gt) in enumerate(train_loader):
         
-        image = image.reshape(-1, 1, image.shape[1], image.shape[2]).cuda()
+        images = images.reshape(-1, 1, images.shape[1], images.shape[2]).cuda()
         gt = gt.reshape(-1, 1, gt.shape[1], gt.shape[2]).cuda()
         
-        predictions = model(image)
+        predictions = model(images)
         
         loss = criterion(predictions, gt)
         
@@ -59,12 +62,12 @@ for epoch in range(1, epoch_size):
     
     model.eval()
     with torch.no_grad():
-        for step, (image, gt) in enumerate(valid_loader):
+        for step, (images, gt) in enumerate(valid_loader):
             
-            image = image.reshape(-1, 1, image.shape[1], image.shape[2]).cuda()
+            images = images.reshape(-1, 1, images.shape[1], images.shape[2]).cuda()
             gt = gt.reshape(-1, 1, gt.shape[1], gt.shape[2]).cuda()
             
-            predictions = model(image)
+            predictions = model(images)
             
             loss = criterion(predictions, gt)
             
