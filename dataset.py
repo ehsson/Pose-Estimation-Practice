@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import Dataset
 import torchvision
+from skimage.feature import peak_local_max
 
 def generate_gaussian(t, x, y, sigma=10):
     """
@@ -76,7 +77,7 @@ class MPIIDataset(Dataset):
             for i in range(len(json_data)):
                 if json_data[i]['img_width'] == 1280 and json_data[i]['img_height'] == 720 and json_data[i]['numOtherPeople'] == 0:
                     self.image_name_list.append(json_data[i]['img_paths'])
-                    self.joints_list.append(json_data[i]['joint_self'])
+                    self.joints_list.append(np.array(json_data[i]['joint_self'])[:, :2])
             
 
     def __len__(self):
@@ -84,22 +85,30 @@ class MPIIDataset(Dataset):
 
     def __getitem__(self, idx):
         image = cv2.imread(self.image_dir + self.image_name_list[idx], 0)
+        image = cv2.resize(image, dsize=(int(1280/2), int(704/2)))
         image = np.float32(image)
         image = image / 255
         
         temp_heatmap = []
         joint_points = self.joints_list[idx]
+        joint_points[:, 0] = joint_points[:, 0] * 0.5
+        joint_points[:, 1] = joint_points[:, 1] * ((704/2)/720)
         for i in range(len(joint_points)):
-            heatmap = generate_gaussian(np.zeros((image.shape[0], image.shape[1])), joint_points[i][0], joint_points[i][1])
+            heatmap = generate_gaussian(np.zeros((image.shape[0], image.shape[1])), joint_points[i][0], joint_points[i][1], sigma=5)
             temp_heatmap.append(heatmap)
         
         temp_heatmap = np.array(temp_heatmap, dtype=np.float32)
         gt = np.max(temp_heatmap, axis=0)
         
-        # plt.subplot(1, 2, 1)
+        # plt.subplot(1, 3, 1)
         # plt.imshow(image)
-        # plt.subplot(1, 2, 2)
+        # plt.subplot(1, 3, 2)
         # plt.imshow(gt)
+        # plt.subplot(1, 3, 3)
+        # plt.imshow(image)
+        # peaks = peak_local_max(gt, min_distance=3, threshold_abs=0.5)
+        # for peak in peaks:
+        #     plt.plot(peak[1], peak[0], 'r.')
         # plt.show()
         
         return image, gt

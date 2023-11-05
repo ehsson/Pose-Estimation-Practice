@@ -24,8 +24,8 @@ train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
 print("train size: {}".format(train_size))
 print("valid_size: {}".format(valid_size))
 
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
-valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=0)
+valid_loader = DataLoader(valid_dataset, batch_size=2, shuffle=False, num_workers=0)
 
 criterion = nn.MSELoss(reduce='mean')
 
@@ -54,7 +54,7 @@ for epoch in range(1, epoch_size):
         
         train_loss += loss.item()
         sys.stdout.write('\r')
-        sys.stdout.write("step: %d/%d  train_loss: %.5f" % (step, len(train_loader), train_loss/step))
+        sys.stdout.write("step: %d/%d  train_loss: %.5f" % (step + 1, len(train_loader), train_loss/(step + 1)))
         sys.stdout.flush()
     
     train_loss = train_loss / len(train_loader)
@@ -73,7 +73,7 @@ for epoch in range(1, epoch_size):
             
             valid_loss += loss.item()
             sys.stdout.write('\r')
-            sys.stdout.write("step: %d/%d  valid_loss: %.5f" % (step, len(valid_loader), valid_loss/step))
+            sys.stdout.write("step: %d/%d  valid_loss: %.5f" % (step + 1, len(valid_loader), valid_loss/(step + 1)))
             sys.stdout.flush()
         
     valid_loss = valid_loss / len(valid_loader)
