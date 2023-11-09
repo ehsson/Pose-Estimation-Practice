@@ -72,9 +72,9 @@ class MPIIDataset(Dataset):
         
 
         with open(annotation_dir + 'mpii_annotations.json', 'r') as f:
-            json_data = json.load(f)
+            json_data = json.load(f)[:3000]
 
-            for i in range(len(json_data)):
+            for i in range(int(len(json_data))):
                 if json_data[i]['img_width'] == 1280 and json_data[i]['img_height'] == 720 and json_data[i]['numOtherPeople'] == 0:
                     self.image_name_list.append(json_data[i]['img_paths'])
                     self.joints_list.append(np.array(json_data[i]['joint_self'])[:, :2])

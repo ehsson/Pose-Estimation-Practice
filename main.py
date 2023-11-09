@@ -18,7 +18,7 @@ epoch_size = 100
 dataset = MPIIDataset()
 dataset_size = len(dataset)
 train_size = int(dataset_size * 0.8)
-valid_size = int(dataset_size * 0.2)
+valid_size = dataset_size - train_size
 train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
 
 print("train size: {}".format(train_size))
@@ -78,3 +78,6 @@ for epoch in range(1, epoch_size):
         
     valid_loss = valid_loss / len(valid_loader)
     print("\nepoch: {}  valid_loss: {:.5f}\n".format(epoch, valid_loss))
+    
+    path = 'E:/exp/HRNet/epoch{}_t_{:.5f}_v_{:.5f}.pth'.format(epoch, train_loss, valid_loss)
+    torch.save(model, path)
