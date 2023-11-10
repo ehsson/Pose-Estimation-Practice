@@ -8,6 +8,7 @@ import torch.nn as nn
 import torchvision
 from torch import optim
 from torch.utils.data import DataLoader, random_split
+from sklearn.model_selection import train_test_split
 
 from pose_hrnet.models.pose_hrnet import PoseHighResolutionNet
 from pose_hrnet.config.default import _C as cfg
@@ -17,12 +18,14 @@ epoch_size = 100
 
 dataset = MPIIDataset()
 dataset_size = len(dataset)
-train_size = int(dataset_size * 0.8)
+train_size = int(dataset_size*0.8)
 valid_size = dataset_size - train_size
-train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
+train_dataset, valid_dataset = train_test_split(dataset, test_size=0.2, shuffle=False)
+# train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
 
-print("train size: {}".format(train_size))
-print("valid_size: {}".format(valid_size))
+print("dataset size: {}".format(dataset_size))
+print("train size: {}".format(len(train_dataset)))
+print("valid size: {}".format(len(valid_dataset)))
 
 train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=0)
 valid_loader = DataLoader(valid_dataset, batch_size=2, shuffle=False, num_workers=0)
@@ -40,7 +43,7 @@ for epoch in range(1, epoch_size):
     
     model.train()
     for step, (images, gt) in enumerate(train_loader):
-        
+
         images = images.reshape(-1, 1, images.shape[1], images.shape[2]).cuda()
         gt = gt.reshape(-1, 1, gt.shape[1], gt.shape[2]).cuda()
         
@@ -80,4 +83,4 @@ for epoch in range(1, epoch_size):
     print("\nepoch: {}  valid_loss: {:.5f}\n".format(epoch, valid_loss))
     
     path = 'E:/exp/HRNet/epoch{}_t_{:.5f}_v_{:.5f}.pth'.format(epoch, train_loss, valid_loss)
-    torch.save(model, path)
+    torch.save(model.state_dict(), path)
