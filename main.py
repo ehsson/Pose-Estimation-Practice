@@ -27,17 +27,25 @@ print("dataset size: {}".format(dataset_size))
 print("train size: {}".format(len(train_dataset)))
 print("valid size: {}".format(len(valid_dataset)))
 
-train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=0)
-valid_loader = DataLoader(valid_dataset, batch_size=2, shuffle=False, num_workers=0)
+train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=0)
+valid_loader = DataLoader(valid_dataset, batch_size=1, shuffle=False, num_workers=0)
 
-criterion = nn.MSELoss(reduce='mean')
+criterion = nn.MSELoss(reduction='mean')
 
 model = PoseHighResolutionNet(cfg)
-model = model.cuda()
+
+load_model = False
+start_epoch = 0
+
+if load_model:
+    model.load_state_dict(torch.load('E:/exp/HRNet/epoch3_t_0.00477_v_0.00462.pth'))
+    start_epoch = 4
+    
+model.to(torch.device('cuda'))
 
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
-for epoch in range(1, epoch_size):
+for epoch in range(start_epoch, epoch_size):
     train_loss = 0
     valid_loss = 0
     
@@ -45,7 +53,7 @@ for epoch in range(1, epoch_size):
     for step, (images, gt) in enumerate(train_loader):
 
         images = images.reshape(-1, 1, images.shape[1], images.shape[2]).cuda()
-        gt = gt.reshape(-1, 1, gt.shape[1], gt.shape[2]).cuda()
+        gt = gt.cuda()
         
         predictions = model(images)
         
@@ -68,7 +76,7 @@ for epoch in range(1, epoch_size):
         for step, (images, gt) in enumerate(valid_loader):
             
             images = images.reshape(-1, 1, images.shape[1], images.shape[2]).cuda()
-            gt = gt.reshape(-1, 1, gt.shape[1], gt.shape[2]).cuda()
+            gt = gt.cuda()
             
             predictions = model(images)
             

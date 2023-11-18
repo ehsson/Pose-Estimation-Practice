@@ -24,15 +24,15 @@ print("train size: {}".format(len(train_dataset)))
 print("valid size: {}".format(len(valid_dataset)))
 
 train_loader = DataLoader(train_dataset, batch_size=2, shuffle=False, num_workers=0)
-valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=False, num_workers=0)
+valid_loader = DataLoader(valid_dataset, batch_size=4, shuffle=False, num_workers=0)
 
 best_model = PoseHighResolutionNet(cfg)
-best_model.load_state_dict(torch.load('E:/exp/HRNet/epoch8_t_0.00691_v_0.00674.pth'))
+best_model.load_state_dict(torch.load('E:/exp/HRNet/epoch20_t_0.00024_v_0.00024.pth'))
 best_model = best_model.cuda()
 best_model.eval()
 
 with torch.no_grad():
-    for step, (images, gt) in enumerate(valid_loader):
+    for step, (images, gt) in enumerate(train_loader):
         
         images = images.reshape(-1, 1, images.shape[1], images.shape[2]).cuda()
         
@@ -42,14 +42,16 @@ with torch.no_grad():
         predictions = predictions.cpu()
         
         for idx in range(len(images)):
-            image = images[idx][0]
-            gt = gt[idx]
-            prediction = predictions[idx][0]
+            image = np.array(images[idx][0])
+            gt_ = np.array(gt[idx])
+            gt_ = np.max(gt_, axis=0)
+            prediction = np.array(predictions[idx])
+            prediction = np.max(prediction, axis=0)
             
             plt.subplot(1, 3, 1)
             plt.imshow(image)
             plt.subplot(1, 3, 2)
-            plt.imshow(gt)
+            plt.imshow(gt_)
             plt.subplot(1, 3, 3)
             plt.imshow(prediction)
             plt.show()

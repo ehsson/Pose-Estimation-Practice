@@ -75,7 +75,7 @@ class MPIIDataset(Dataset):
             json_data = json.load(f)[:3000]
 
             for i in range(int(len(json_data))):
-                if json_data[i]['img_width'] == 1280 and json_data[i]['img_height'] == 720 and json_data[i]['numOtherPeople'] == 0:
+                if json_data[i]['img_width'] == 640 and json_data[i]['img_height'] == 480 and json_data[i]['numOtherPeople'] == 0:
                     self.image_name_list.append(json_data[i]['img_paths'])
                     self.joints_list.append(np.array(json_data[i]['joint_self'])[:, :2])
             
@@ -85,20 +85,17 @@ class MPIIDataset(Dataset):
 
     def __getitem__(self, idx):
         image = cv2.imread(self.image_dir + self.image_name_list[idx], 0)
-        image = cv2.resize(image, dsize=(int(1280/2), int(704/2)))
         image = np.float32(image)
         image = image / 255
         
         temp_heatmap = []
         joint_points = self.joints_list[idx]
-        joint_points[:, 0] = joint_points[:, 0] * 0.5
-        joint_points[:, 1] = joint_points[:, 1] * ((704/2)/720)
+
         for i in range(len(joint_points)):
             heatmap = generate_gaussian(np.zeros((image.shape[0], image.shape[1])), joint_points[i][0], joint_points[i][1], sigma=5)
             temp_heatmap.append(heatmap)
         
-        temp_heatmap = np.array(temp_heatmap, dtype=np.float32)
-        gt = np.max(temp_heatmap, axis=0)
+        gt = np.array(temp_heatmap, dtype=np.float32)
         
         # plt.subplot(1, 3, 1)
         # plt.imshow(image)

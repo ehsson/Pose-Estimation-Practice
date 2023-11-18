@@ -318,22 +318,15 @@ class PoseHighResolutionNet(nn.Module):
         self.stage4, pre_stage_channels = self._make_stage(
             self.stage4_cfg, num_channels, multi_scale_output=False)
 
-        # self.final_layer = nn.Conv2d(
-        #     in_channels=pre_stage_channels[0],
-        #     out_channels=cfg['MODEL']['NUM_JOINTS'],
-        #     kernel_size=extra['FINAL_CONV_KERNEL'],
-        #     stride=1,
-        #     padding=1 if extra['FINAL_CONV_KERNEL'] == 3 else 0
-        # )
-        
         self.final_layer = nn.Conv2d(
             in_channels=pre_stage_channels[0],
-            out_channels=1,
+            out_channels=cfg['MODEL']['NUM_JOINTS'],
             kernel_size=extra['FINAL_CONV_KERNEL'],
             stride=1,
             padding=1 if extra['FINAL_CONV_KERNEL'] == 3 else 0
         )
 
+        self.sigmoid = nn.Sigmoid()
         # self.pretrained_layers = extra['PRETRAINED_LAYERS']
 
     def _make_transition_layer(
@@ -462,7 +455,7 @@ class PoseHighResolutionNet(nn.Module):
         y_list = self.stage4(x_list)
 
         x = self.final_layer(y_list[0])
-
+        x = self.sigmoid(x)
         return x
 
     def init_weights(self, pretrained=''):
